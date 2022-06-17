@@ -1,0 +1,37 @@
+- name: syslog + fluent-bit + elasticsearch + kibana
+  hosts: localhost
+  gather_facts: False
+  become: True
+  vars:
+    rsyslog_target_ip: "127.0.0.1"
+    fluent_bit_port: 5140
+  tasks:
+    - name: установка службы rsyslog
+      ansible.builtin.apt:
+        name: rsyslog
+        update_cache: yes
+        cache_valid_time: 86400
+
+    - name: конфигурация rsyslog для отправки логов на fluent-bit
+      ansible.builtin.template:
+        src: templates/60-fluent-bit.conf.j2
+        dest: /etc/rsyslog.d/60-fluent-bit.conf
+        mode: 0644
+      notify: rsyslog restart 
+
+    - name: запуск docker-compose.yml
+      ansible.builtin.command:
+        cmd: docker-compose up -d
+      register: result
+      changed_when: result.stderr | regex_search('Created', multiline=True)
+
+    
+  handlers:
+    - name: rsyslog restart
+      ansible.builtin.service: 
+        name: rsyslog 
+        state: restarted
+      
+      
+      
+        

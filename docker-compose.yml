@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  fluent-bit:
+    container_name: fluent-bit
+    image: fluent/fluent-bit
+    ports:
+      # необходимо открыть порты, которые используются плагином syslog
+      - 5140:5140
+      - 5140:5140/udp
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    depends_on:
+      - elasticsearch
+  
+  kibana:
+    container_name: kibana
+    image: kibana:7.17.4
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:7.17.4
+    environment:
+      - "discovery.type=single-node"
+
+  
